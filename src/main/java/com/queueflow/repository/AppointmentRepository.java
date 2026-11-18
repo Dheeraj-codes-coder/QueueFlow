@@ -1,4 +1,3 @@
-
 package com.queueflow.repository;
 
 import java.time.LocalDate;
@@ -42,4 +41,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             Long patientId,
             LocalDate date,
             List<AppointmentStatus> statuses);
+
+    boolean existsByIdAndDoctor_ClinicStaff_User_Email(
+            Long appointmentId,
+            String email);
 }

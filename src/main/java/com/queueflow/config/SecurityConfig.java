@@ -59,8 +59,8 @@ public class SecurityConfig {
                     .hasRole("DOCTOR")
 
                 // Prescription APIs
-                .requestMatchers("/api/prescriptions/**")
-                    .hasAnyRole("PATIENT", "DOCTOR")
+                    .requestMatchers("/api/appointments/**")
+                    .hasRole("PATIENT")
 
                 // Appointment APIs
                 .requestMatchers("/api/appointments/**")

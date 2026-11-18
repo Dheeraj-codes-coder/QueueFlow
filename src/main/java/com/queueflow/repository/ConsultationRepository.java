@@ -12,4 +12,8 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Long
     Optional<Consultation> findByQueueTicket_Id(Long queueTicketId);
 
     List<Consultation> findAllByDoctor_IdOrderByStartedAtDesc(Long doctorId);
+
+    boolean existsByIdAndDoctor_ClinicStaff_User_Email(
+            Long consultationId,
+            String email);
 }

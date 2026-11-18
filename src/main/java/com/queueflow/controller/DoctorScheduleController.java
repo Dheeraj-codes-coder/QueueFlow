@@ -1,4 +1,3 @@
-
 package com.queueflow.controller;
 
 import java.util.ArrayList;
@@ -6,6 +5,8 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +20,8 @@ import com.queueflow.dto.DoctorScheduleRequest;
 import com.queueflow.dto.DoctorScheduleResponse;
 import com.queueflow.dto.DoctorScheduleUpdateRequest;
 import com.queueflow.entity.DoctorSchedule;
+import com.queueflow.repository.DoctorProfileRepository;
+import com.queueflow.repository.DoctorScheduleRepository;
 import com.queueflow.service.DoctorScheduleService;
 
 import jakarta.validation.Valid;
@@ -28,9 +31,47 @@ import jakarta.validation.Valid;
 public class DoctorScheduleController {
 
     private final DoctorScheduleService doctorScheduleService;
+    private final DoctorProfileRepository doctorProfileRepository;
+    private final DoctorScheduleRepository doctorScheduleRepository;
 
-    public DoctorScheduleController(DoctorScheduleService doctorScheduleService) {
+    public DoctorScheduleController(
+            DoctorScheduleService doctorScheduleService,
+            DoctorProfileRepository doctorProfileRepository,
+            DoctorScheduleRepository doctorScheduleRepository) {
+
         this.doctorScheduleService = doctorScheduleService;
+        this.doctorProfileRepository = doctorProfileRepository;
+        this.doctorScheduleRepository = doctorScheduleRepository;
+    }
+
+    private String getLoggedInEmail() {
+
+        return SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+    }
+
+    private void checkDoctorOwnership(Long doctorId) {
+
+        boolean isOwner = doctorProfileRepository
+                .existsByIdAndClinicStaff_User_Email(
+                        doctorId, getLoggedInEmail());
+
+        if (!isOwner) {
+            throw new AccessDeniedException(
+                    "You are not allowed to modify this doctor's schedule");
+        }
+    }
+
+    private void checkScheduleOwnership(Long scheduleId) {
+
+        boolean isOwner = doctorScheduleRepository
+                .existsByIdAndDoctor_ClinicStaff_User_Email(
+                        scheduleId, getLoggedInEmail());
+
+        if (!isOwner) {
+            throw new AccessDeniedException(
+                    "You are not allowed to modify this doctor's schedule");
+        }
     }
 
     @PostMapping("/{doctorId}/schedule")
@@ -38,7 +79,10 @@ public class DoctorScheduleController {
             @PathVariable Long doctorId,
             @Valid @RequestBody DoctorScheduleRequest request) {
 
-        DoctorSchedule schedule = doctorScheduleService.createSchedule(doctorId, request);
+        checkDoctorOwnership(doctorId);
+
+        DoctorSchedule schedule =
+                doctorScheduleService.createSchedule(doctorId, request);
 
         DoctorScheduleResponse response = new DoctorScheduleResponse(
                 schedule.getId(),
@@ -75,13 +119,15 @@ public class DoctorScheduleController {
             responses.add(response);
         }
 
-        return new ResponseEntity<>(responses, HttpStatus.OK);
+        return ResponseEntity.ok(responses);
     }
 
     @PutMapping("/schedule/{scheduleId}")
     public ResponseEntity<DoctorScheduleResponse> updateSchedule(
             @PathVariable Long scheduleId,
             @Valid @RequestBody DoctorScheduleUpdateRequest request) {
+
+        checkScheduleOwnership(scheduleId);
 
         DoctorSchedule schedule =
                 doctorScheduleService.updateSchedule(scheduleId, request);
@@ -95,18 +141,18 @@ public class DoctorScheduleController {
                 schedule.isAvailable()
         );
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/schedule/{scheduleId}")
     public ResponseEntity<String> deleteSchedule(
             @PathVariable Long scheduleId) {
 
+        checkScheduleOwnership(scheduleId);
+
         doctorScheduleService.deleteSchedule(scheduleId);
 
-        return new ResponseEntity<>(
-                "Doctor schedule deleted successfully",
-                HttpStatus.OK
-        );
+        return ResponseEntity.ok(
+                "Doctor schedule deleted successfully");
     }
 }

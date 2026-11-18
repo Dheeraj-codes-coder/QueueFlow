@@ -14,4 +14,14 @@ public interface PrescriptionRepository extends JpaRepository<Prescription, Long
     List<Prescription> findAllByConsultation_QueueTicket_Patient_IdOrderByPrescribedAtDesc(
             Long patientId
     );
+
+    boolean existsByIdAndConsultation_Doctor_ClinicStaff_User_Email(
+            Long prescriptionId,
+            String email
+    );
+
+    boolean existsByIdAndConsultation_QueueTicket_Patient_User_Email(
+            Long prescriptionId,
+            String email
+    );
 }

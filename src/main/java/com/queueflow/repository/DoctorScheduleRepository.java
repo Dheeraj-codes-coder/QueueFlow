@@ -1,4 +1,3 @@
-
 package com.queueflow.repository;
 
 import java.time.DayOfWeek;
@@ -26,5 +25,9 @@ public interface DoctorScheduleRepository extends JpaRepository<DoctorSchedule, 
             Long scheduleId
     );
 
-    List<DoctorSchedule> findAllByDoctor_IdOrderByDayOfWeekAscStartTimeAsc(Long doctorId);
+    List<DoctorSchedule> findAllByDoctor_IdOrderByDayOfWeekAscStartTimeAsc(
+            Long doctorId);
+
+    boolean existsByIdAndDoctor_ClinicStaff_User_Email(
+            Long scheduleId, String email);
 }

@@ -1,4 +1,3 @@
-
 package com.queueflow.repository;
 
 import java.time.LocalDate;
@@ -42,4 +41,8 @@ public interface QueueTicketRepository extends JpaRepository<QueueTicket, Long> 
     @Query("SELECT q FROM QueueTicket q WHERE q.id = :ticketId")
     Optional<QueueTicket> findByIdForUpdate(
             @Param("ticketId") Long ticketId);
+
+    boolean existsByIdAndDoctor_ClinicStaff_User_Email(
+            Long queueTicketId,
+            String email);
 }

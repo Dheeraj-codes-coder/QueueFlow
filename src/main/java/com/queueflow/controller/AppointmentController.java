@@ -1,8 +1,9 @@
-
 package com.queueflow.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,8 @@ import com.queueflow.dto.AppointmentBookingResponse;
 import com.queueflow.dto.AppointmentCancellationResponse;
 import com.queueflow.dto.AppointmentRescheduleRequest;
 import com.queueflow.entity.Appointment;
+import com.queueflow.entity.PatientProfile;
+import com.queueflow.repository.PatientProfileRepository;
 import com.queueflow.service.AppointmentService;
 
 import jakarta.validation.Valid;
@@ -26,17 +29,49 @@ import jakarta.validation.Valid;
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
+    private final PatientProfileRepository patientProfileRepository;
 
-    public AppointmentController(AppointmentService appointmentService) {
+    public AppointmentController(
+            AppointmentService appointmentService,
+            PatientProfileRepository patientProfileRepository) {
+
         this.appointmentService = appointmentService;
+        this.patientProfileRepository = patientProfileRepository;
+    }
+
+    private Long getLoggedInPatientId() {
+
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        PatientProfile patient = patientProfileRepository
+                .findByUser_Email(email)
+                .orElseThrow(() -> new AccessDeniedException(
+                        "Patient profile not found"));
+
+        return patient.getId();
+    }
+
+    private void checkPatientOwnership(
+            Long requestedPatientId,
+            Long loggedInPatientId) {
+
+        if (!loggedInPatientId.equals(requestedPatientId)) {
+            throw new AccessDeniedException(
+                    "You are not allowed to access another patient's appointments");
+        }
     }
 
     @PostMapping("/book")
     public ResponseEntity<AppointmentBookingResponse> bookAppointment(
             @Valid @RequestBody AppointmentBookingRequest request) {
 
+        Long patientId = getLoggedInPatientId();
+
+        checkPatientOwnership(request.getPatientId(), patientId);
+
         Appointment appointment = appointmentService.bookAppointment(
-                request.getPatientId(),
+                patientId,
                 request.getSlotId(),
                 request.getReason()
         );
@@ -56,10 +91,15 @@ public class AppointmentController {
             @PathVariable Long appointmentId,
             @RequestParam Long patientId) {
 
-        AppointmentCancellationResponse response =
-                appointmentService.cancelAppointment(patientId, appointmentId);
+        Long loggedInPatientId = getLoggedInPatientId();
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        checkPatientOwnership(patientId, loggedInPatientId);
+
+        AppointmentCancellationResponse response =
+                appointmentService.cancelAppointment(
+                        loggedInPatientId, appointmentId);
+
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{appointmentId}/reschedule")
@@ -67,8 +107,12 @@ public class AppointmentController {
             @PathVariable Long appointmentId,
             @Valid @RequestBody AppointmentRescheduleRequest request) {
 
+        Long patientId = getLoggedInPatientId();
+
+        checkPatientOwnership(request.getPatientId(), patientId);
+
         Appointment appointment = appointmentService.rescheduleAppointment(
-                request.getPatientId(),
+                patientId,
                 appointmentId,
                 request.getNewSlotId()
         );
@@ -80,6 +124,6 @@ public class AppointmentController {
                 "Appointment rescheduled successfully"
         );
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 }
