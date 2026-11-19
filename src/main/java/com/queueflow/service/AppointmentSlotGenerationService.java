@@ -3,6 +3,7 @@ package com.queueflow.service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -58,9 +59,14 @@ public class AppointmentSlotGenerationService {
             throw new RuntimeException("Doctor has no weekly schedule");
         }
 
-        int totalSlotsGenerated = 0;
+        ZoneId zoneId = ZoneId.of(
+                doctor.getClinicStaff().getClinic().getTimezone()
+        );
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(zoneId);
+        LocalTime currentTime = LocalTime.now(zoneId);
+
+        int totalSlotsGenerated = 0;
 
         for (int i = 0; i < 30; i++) {
 
@@ -82,6 +88,13 @@ public class AppointmentSlotGenerationService {
                 while (!startTime.plusMinutes(duration).isAfter(scheduleEndTime)) {
 
                     LocalTime endTime = startTime.plusMinutes(duration);
+
+                    if (slotDate.equals(today)
+                            && !startTime.isAfter(currentTime)) {
+
+                        startTime = endTime;
+                        continue;
+                    }
 
                     boolean exists = appointmentSlotRepository
                             .existsByDoctor_IdAndSlotDateAndStartTime(

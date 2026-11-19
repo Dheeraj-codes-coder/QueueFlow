@@ -1,3 +1,4 @@
+
 package com.queueflow.exception;
 
 import java.util.Map;
@@ -11,6 +12,16 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidCredentialsException(
+            InvalidCredentialsException exception) {
+
+        return new ResponseEntity<>(
+                Map.of("message", exception.getMessage()),
+                HttpStatus.UNAUTHORIZED
+        );
+    }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, String>> handleAccessDeniedException(

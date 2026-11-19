@@ -2,6 +2,8 @@
 package com.queueflow.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,25 @@ public class AppointmentService {
         this.patientProfileRepository = patientProfileRepository;
     }
 
+    private boolean isPastSlot(AppointmentSlot slot) {
+
+        String timezone = slot.getDoctor()
+                .getClinicStaff()
+                .getClinic()
+                .getTimezone();
+
+        ZoneId zoneId = ZoneId.of(timezone);
+
+        LocalDateTime currentDateTime = LocalDateTime.now(zoneId);
+
+        LocalDateTime slotDateTime = LocalDateTime.of(
+                slot.getSlotDate(),
+                slot.getStartTime()
+        );
+
+        return slotDateTime.isBefore(currentDateTime);
+    }
+
     @Transactional
     public Appointment bookAppointment(Long patientId, Long slotId, String reason) {
 
@@ -46,8 +67,8 @@ public class AppointmentService {
             throw new RuntimeException("This appointment slot is not available");
         }
 
-        if (slot.getSlotDate().isBefore(LocalDate.now())) {
-            throw new RuntimeException("Cannot book an appointment for a past date");
+        if (isPastSlot(slot)) {
+            throw new RuntimeException("Cannot book an appointment for a past time");
         }
 
         Appointment appointment = new Appointment();
@@ -140,9 +161,9 @@ public class AppointmentService {
                     "New appointment slot is not available");
         }
 
-        if (newSlot.getSlotDate().isBefore(LocalDate.now())) {
+        if (isPastSlot(newSlot)) {
             throw new RuntimeException(
-                    "Cannot reschedule to a past date");
+                    "Cannot reschedule to a past time");
         }
 
         appointment.setStatus(AppointmentStatus.CANCELLED);

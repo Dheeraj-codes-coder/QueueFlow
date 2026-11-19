@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.queueflow.dto.LoginRequest;
 import com.queueflow.dto.LoginResponse;
 import com.queueflow.entity.AppUser;
+import com.queueflow.exception.InvalidCredentialsException;
 import com.queueflow.repository.AppUserRepository;
 
 @Service
@@ -36,7 +37,9 @@ public class AuthService {
                 appUserRepository.findByEmail(email);
 
         if (!optionalUser.isPresent()) {
-            throw new RuntimeException("Invalid email or password");
+            throw new InvalidCredentialsException(
+                    "Invalid email or password"
+            );
         }
 
         AppUser user = optionalUser.get();
@@ -45,7 +48,9 @@ public class AuthService {
                 request.getPassword(),
                 user.getPasswordHash())) {
 
-            throw new RuntimeException("Invalid email or password");
+            throw new InvalidCredentialsException(
+                    "Invalid email or password"
+            );
         }
 
         if (!user.isEnabled()) {
