@@ -2,6 +2,7 @@
 package com.queueflow.config;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -52,40 +53,56 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 String email = jwtService.extractEmail(token);
 
-                if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                Optional<AppUser> optionalUser =
+                        appUserRepository.findByEmail(email);
 
-                    Optional<AppUser> optionalUser =
-                            appUserRepository.findByEmail(email);
-
-                    if (optionalUser.isPresent()) {
-
-                        AppUser user = optionalUser.get();
-
-                        if (user.isEnabled()
-                                && jwtService.isTokenValid(token, user)) {
-
-                            UsernamePasswordAuthenticationToken authentication =
-                                    new UsernamePasswordAuthenticationToken(
-                                            user.getEmail(),
-                                            null,
-                                            java.util.List.of(
-                                                    new SimpleGrantedAuthority(
-                                                            "ROLE_" + user.getRole()
-                                                    )
-                                            )
-                                    );
-
-                            SecurityContextHolder.getContext()
-                                    .setAuthentication(authentication);
-                        }
-                    }
+                if (!optionalUser.isPresent()) {
+                    sendUnauthorized(response);
+                    return;
                 }
 
+                AppUser user = optionalUser.get();
+
+                if (!user.isEnabled()
+                        || !jwtService.isTokenValid(token, user)) {
+
+                    sendUnauthorized(response);
+                    return;
+                }
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                user.getEmail(),
+                                null,
+                                List.of(
+                                        new SimpleGrantedAuthority(
+                                                "ROLE_" + user.getRole()
+                                        )
+                                )
+                        );
+
+                SecurityContextHolder.getContext()
+                        .setAuthentication(authentication);
+
             } catch (Exception e) {
+
                 SecurityContextHolder.clearContext();
+
+                sendUnauthorized(response);
+                return;
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void sendUnauthorized(HttpServletResponse response)
+            throws IOException {
+
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write(
+                "{\"message\":\"Invalid or expired token\"}"
+        );
     }
 }
