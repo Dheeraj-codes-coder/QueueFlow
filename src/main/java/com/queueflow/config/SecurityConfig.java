@@ -58,12 +58,12 @@ public class SecurityConfig {
                 .requestMatchers("/api/queue/**")
                     .hasRole("DOCTOR")
 
-                // Prescription APIs
-                    .requestMatchers("/api/appointments/**")
-                    .hasRole("PATIENT")
-
                 // Appointment APIs
                 .requestMatchers("/api/appointments/**")
+                    .hasRole("PATIENT")
+
+                // Prescription APIs
+                .requestMatchers("/api/prescriptions/**")
                     .hasAnyRole("PATIENT", "DOCTOR")
 
                 // All other APIs require authentication
