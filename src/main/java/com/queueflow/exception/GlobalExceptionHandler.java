@@ -62,6 +62,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleOtherExceptions(
             Exception exception) {
 
+        exception.printStackTrace();
+
         return new ResponseEntity<>(
                 Map.of("message", "Something went wrong"),
                 HttpStatus.INTERNAL_SERVER_ERROR

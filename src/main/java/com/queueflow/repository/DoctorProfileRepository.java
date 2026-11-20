@@ -1,15 +1,16 @@
 
 package com.queueflow.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
-
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.queueflow.entity.DoctorProfile;
+import com.queueflow.enums.DoctorSpecialty;
 
 import jakarta.persistence.LockModeType;
 
@@ -21,4 +22,9 @@ public interface DoctorProfileRepository extends JpaRepository<DoctorProfile, Lo
 
     boolean existsByIdAndClinicStaff_User_Email(Long doctorId, String email);
 
+    List<DoctorProfile> findByActiveTrueOrderBySpecialtyAscExperienceYearsDesc();
+
+    List<DoctorProfile> findByActiveTrueAndSpecialtyOrderByExperienceYearsDesc(
+            DoctorSpecialty specialty
+    );
 }

@@ -3,6 +3,8 @@ package com.queueflow.entity;
 
 import java.math.BigDecimal;
 
+import com.queueflow.enums.DoctorSpecialty;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,6 +13,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Column;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 
 @Entity
 @Table(name = "doctor_profile")
@@ -32,6 +36,10 @@ public class DoctorProfile {
 
     @Column(precision = 10, scale = 2)
     private BigDecimal consultationFee;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 60)
+    private DoctorSpecialty specialty;
 
     private boolean active;
 
@@ -84,6 +92,14 @@ public class DoctorProfile {
 
     public void setConsultationFee(BigDecimal consultationFee) {
         this.consultationFee = consultationFee;
+    }
+
+    public DoctorSpecialty getSpecialty() {
+        return specialty;
+    }
+
+    public void setSpecialty(DoctorSpecialty specialty) {
+        this.specialty = specialty;
     }
 
     public boolean isActive() {

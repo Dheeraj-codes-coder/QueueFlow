@@ -3,6 +3,8 @@ package com.queueflow.dto;
 
 import java.math.BigDecimal;
 
+import com.queueflow.enums.DoctorSpecialty;
+
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
@@ -29,6 +31,9 @@ public class DoctorRegistrationRequest {
 
     @NotBlank
     private String qualification;
+
+    @NotNull
+    private DoctorSpecialty specialty;
 
     @Min(0)
     private int experienceYears;
@@ -86,6 +91,14 @@ public class DoctorRegistrationRequest {
 
     public void setQualification(String qualification) {
         this.qualification = qualification;
+    }
+
+    public DoctorSpecialty getSpecialty() {
+        return specialty;
+    }
+
+    public void setSpecialty(DoctorSpecialty specialty) {
+        this.specialty = specialty;
     }
 
     public int getExperienceYears() {

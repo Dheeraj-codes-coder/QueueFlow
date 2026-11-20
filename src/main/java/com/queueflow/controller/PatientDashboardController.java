@@ -1,3 +1,4 @@
+
 package com.queueflow.controller;
 
 import org.springframework.http.ResponseEntity;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.queueflow.dto.PatientDashboardResponse;
+import com.queueflow.entity.PatientProfile;
 import com.queueflow.repository.PatientProfileRepository;
 import com.queueflow.service.PatientDashboardService;
 
@@ -25,6 +27,22 @@ public class PatientDashboardController {
 
         this.patientDashboardService = patientDashboardService;
         this.patientProfileRepository = patientProfileRepository;
+    }
+
+    @GetMapping("/me/dashboard")
+    public ResponseEntity<PatientDashboardResponse> getMyDashboard() {
+
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        PatientProfile patient = patientProfileRepository
+                .findByUser_Email(email)
+                .orElseThrow(() -> new RuntimeException("Patient profile not found"));
+
+        PatientDashboardResponse response =
+                patientDashboardService.getPatientDashboard(patient.getId());
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{patientId}/dashboard")

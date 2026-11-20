@@ -82,6 +82,7 @@ public class DoctorService {
 
         doctor.setClinicStaff(clinicStaff);
         doctor.setQualification(request.getQualification());
+        doctor.setSpecialty(request.getSpecialty());
         doctor.setActive(true);
         doctor.setExperienceYears(request.getExperienceYears());
         doctor.setConsultationDurationMinutes(request.getConsultationDurationMinutes());

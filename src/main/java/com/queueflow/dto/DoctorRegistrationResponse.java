@@ -3,6 +3,8 @@ package com.queueflow.dto;
 
 import java.math.BigDecimal;
 
+import com.queueflow.enums.DoctorSpecialty;
+
 public class DoctorRegistrationResponse {
 
     private Long doctorId;
@@ -12,6 +14,7 @@ public class DoctorRegistrationResponse {
     private Long clinicId;
     private String clinicName;
     private String qualification;
+    private DoctorSpecialty specialty;
     private int experienceYears;
     private int consultationDurationMinutes;
     private BigDecimal consultationFee;
@@ -25,6 +28,7 @@ public class DoctorRegistrationResponse {
             Long clinicId,
             String clinicName,
             String qualification,
+            DoctorSpecialty specialty,
             int experienceYears,
             int consultationDurationMinutes,
             BigDecimal consultationFee,
@@ -37,6 +41,7 @@ public class DoctorRegistrationResponse {
         this.clinicId = clinicId;
         this.clinicName = clinicName;
         this.qualification = qualification;
+        this.specialty = specialty;
         this.experienceYears = experienceYears;
         this.consultationDurationMinutes = consultationDurationMinutes;
         this.consultationFee = consultationFee;
@@ -69,6 +74,10 @@ public class DoctorRegistrationResponse {
 
     public String getQualification() {
         return qualification;
+    }
+
+    public DoctorSpecialty getSpecialty() {
+        return specialty;
     }
 
     public int getExperienceYears() {

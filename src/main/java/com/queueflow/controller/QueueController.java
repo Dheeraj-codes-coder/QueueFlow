@@ -78,6 +78,18 @@ public class QueueController {
         }
     }
 
+    private void checkPatientAppointmentOwnership(Long appointmentId) {
+
+        boolean isOwner = appointmentRepository
+                .existsByIdAndPatient_User_Email(
+                        appointmentId, getLoggedInEmail());
+
+        if (!isOwner) {
+            throw new AccessDeniedException(
+                    "You are not allowed to check in this appointment");
+        }
+    }
+
     private void checkQueueTicketOwnership(Long queueTicketId) {
 
         boolean isOwner = queueTicketRepository
@@ -90,11 +102,26 @@ public class QueueController {
         }
     }
 
+    // Doctor check-in
     @PostMapping("/check-in")
     public ResponseEntity<QueueCheckInResponse> checkInPatient(
             @Valid @RequestBody QueueCheckInRequest request) {
 
         checkAppointmentOwnership(request.getAppointmentId());
+
+        QueueCheckInResponse response =
+                queueTicketService.checkInPatient(
+                        request.getAppointmentId());
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    // Patient check-in
+    @PostMapping("/patient/check-in")
+    public ResponseEntity<QueueCheckInResponse> patientCheckIn(
+            @Valid @RequestBody QueueCheckInRequest request) {
+
+        checkPatientAppointmentOwnership(request.getAppointmentId());
 
         QueueCheckInResponse response =
                 queueTicketService.checkInPatient(

@@ -1,4 +1,3 @@
-
 package com.queueflow.config;
 
 import org.springframework.context.annotation.Bean;
@@ -39,12 +38,26 @@ public class SecurityConfig {
                     "/api/patients/register"
                 ).permitAll()
 
-                // Public doctor schedule and slot viewing
+                // Public doctor browsing
                 .requestMatchers(
                     HttpMethod.GET,
+                    "/api/doctors",
+                    "/api/doctors/specialties",
                     "/api/doctors/*/schedule",
                     "/api/doctors/*/slots"
                 ).permitAll()
+
+                // Only ADMIN can update doctor specialty
+                .requestMatchers(
+                    HttpMethod.PUT,
+                    "/api/doctors/*/specialty"
+                ).hasRole("ADMIN")
+
+                // Patient check-in
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/api/queue/patient/check-in"
+                ).hasRole("PATIENT")
 
                 // Patient APIs
                 .requestMatchers("/api/patients/**")
@@ -54,7 +67,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/doctors/**")
                     .hasRole("DOCTOR")
 
-                // Queue management
+                // Doctor queue management
                 .requestMatchers("/api/queue/**")
                     .hasRole("DOCTOR")
 
