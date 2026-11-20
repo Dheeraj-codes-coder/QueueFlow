@@ -1,8 +1,14 @@
 package com.queueflow.config;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -18,9 +24,39 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.setAllowedOrigins(
+                List.of("http://localhost:5173"));
+
+        configuration.setAllowedMethods(
+                List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+
+        configuration.setAllowedHeaders(
+                List.of("*"));
+
+        configuration.setAllowCredentials(true);
+
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
+            .cors(cors ->
+                cors.configurationSource(corsConfigurationSource())
+            )
+
             .csrf(csrf -> csrf.disable())
 
             .sessionManagement(session ->
@@ -28,6 +64,8 @@ public class SecurityConfig {
             )
 
             .authorizeHttpRequests(auth -> auth
+
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                 // Public login and registration
                 .requestMatchers(
@@ -47,11 +85,15 @@ public class SecurityConfig {
                     "/api/doctors/*/slots"
                 ).permitAll()
 
-                // Only ADMIN can update doctor specialty
+                // ADMIN only: specialty updates
                 .requestMatchers(
                     HttpMethod.PUT,
                     "/api/doctors/*/specialty"
                 ).hasRole("ADMIN")
+
+                // ADMIN only: user management
+                .requestMatchers("/api/admin/**")
+                    .hasRole("ADMIN")
 
                 // Patient check-in
                 .requestMatchers(
@@ -79,7 +121,6 @@ public class SecurityConfig {
                 .requestMatchers("/api/prescriptions/**")
                     .hasAnyRole("PATIENT", "DOCTOR")
 
-                // All other APIs require authentication
                 .anyRequest().authenticated()
             )
 

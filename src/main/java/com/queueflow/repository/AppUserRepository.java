@@ -1,5 +1,6 @@
 package com.queueflow.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,4 +14,8 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     boolean existsByPhone(String phone);
 
     Optional<AppUser> findByEmail(String email);
+
+    List<AppUser> findAllByOrderByCreatedAtDesc();
+
+    long countByRoleAndEnabledTrue(String role);
 }
