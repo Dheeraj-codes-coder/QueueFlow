@@ -1,23 +1,36 @@
 # QueueFlow
 
-QueueFlow is a Spring Boot REST API for managing clinic operations, doctor appointments, patient queues, consultations, and prescriptions.
+QueueFlow is a clinic appointment and patient-queue management application. It contains a **Spring Boot REST API** and a **React frontend** in one repository.
+
+The application supports separate ADMIN, DOCTOR, and PATIENT workflows for managing clinic users, doctor specialties, schedules, appointments, queues, consultations, and prescriptions.
 
 ## Features
 
+### Accounts and access
 - Clinic, doctor, and patient registration
-- Login using email and password with JWT authentication
-- Role-based access for doctors and patients
-- Doctor weekly schedules and appointment-slot generation
-- Patient appointment booking, cancellation, and rescheduling
-- Prevention of duplicate bookings and bookings or rescheduling into past time slots
-- Patient appointment and prescription history
-- Doctor daily appointments, upcoming appointments, consultation history, and dashboard statistics
+- Email/password login with JWT authentication
+- Role-based access for ADMIN, DOCTOR, and PATIENT
+- Admin user listing and account activation/deactivation
+- Admin management of doctor specialties
+- Ownership checks for protected patient and doctor records
+
+### Doctor and clinic operations
+- Doctor specialties and public doctor browsing/filtering
+- Weekly doctor schedules and appointment-slot generation
+- Doctor appointment lists, upcoming appointments, and dashboard statistics
 - Queue check-in, token allocation, calling the next patient, and consultation start/completion
-- Prescription creation and medicine-item management
-- Ownership checks so users can access only the records they are permitted to manage
+- Consultation history and prescription creation
+- Prescription medicine-item management
+
+### Patient operations
+- Patient dashboard and appointment history
+- Appointment booking, cancellation, and rescheduling
+- Patient queue check-in
+- Prescription history and access to permitted prescription details
 
 ## Technology Stack
 
+### Backend
 - Java 25
 - Spring Boot 4.1.2
 - Spring Web MVC
@@ -27,122 +40,182 @@ QueueFlow is a Spring Boot REST API for managing clinic operations, doctor appoi
 - MySQL
 - JWT using JJWT 0.12.6
 - Maven
+- Spring WebSocket starter dependency
 
-The project also includes the Spring WebSocket starter dependency.
+### Frontend
+- React 19
+- React Router
+- Vite
+- Axios
+- Bootstrap 5
+- JavaScript and CSS
 
-## Project Structure
+## Repository Structure
 
 ```text
-src/main/java/com/queueflow/
-├── config/       # Security and JWT request filter
-├── controller/  # REST API endpoints
-├── dto/          # Request and response objects
-├── entity/       # JPA entities
-├── enums/        # Appointment, queue, role, and slot states
-├── exception/    # Application exceptions and global error handling
-├── repository/   # Spring Data JPA repositories
-└── service/      # Business logic
+QueueFlow/
+├── src/                         # Spring Boot backend
+│   └── main/
+│       ├── java/com/queueflow/
+│       │   ├── config/
+│       │   ├── controller/
+│       │   ├── dto/
+│       │   ├── entity/
+│       │   ├── enums/
+│       │   ├── exception/
+│       │   ├── repository/
+│       │   └── service/
+│       └── resources/
+├── frontend/                    # React + Vite frontend
+│   ├── public/
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── pages/
+│   │   └── services/
+│   ├── package.json
+│   └── vite.config.js
+├── pom.xml
+├── mvnw
+└── mvnw.cmd
 ```
 
 ## Requirements
 
 - JDK 25
 - MySQL Server
-- Git (to clone the repository)
+- Node.js and npm
+- Git
 
 ## Local Setup
 
-1. Clone the repository:
+Run the backend and frontend in separate terminals. Start the MySQL database before starting the backend.
 
-   ```bash
-   git clone https://github.com/Dheeraj-codes-coder/QueueFlow.git
-   cd QueueFlow
-   ```
+### 1. Clone the repository
 
-2. Create the database in MySQL:
+```bash
+git clone https://github.com/Dheeraj-codes-coder/QueueFlow.git
+cd QueueFlow
+```
 
-   ```sql
-   CREATE DATABASE queueflow_db;
-   ```
+### 2. Create the MySQL database
 
-3. Create `src/main/resources/application.properties` locally. This file is intentionally not committed because it contains environment-specific settings and secrets.
+In MySQL, run:
 
-   Example local configuration:
+```sql
+CREATE DATABASE queueflow_db;
+```
 
-   ```properties
-   spring.application.name=QueueFlow
-   server.port=8080
+### 3. Configure the backend
 
-   spring.datasource.url=jdbc:mysql://localhost:3306/queueflow_db
-   spring.datasource.username=YOUR_MYSQL_USERNAME
-   spring.datasource.password=YOUR_MYSQL_PASSWORD
-   spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+Create `src/main/resources/application.properties` locally. Keep this file out of Git because it contains machine-specific configuration and secrets.
 
-   spring.jpa.hibernate.ddl-auto=update
-   spring.jpa.show-sql=true
+Example for local development:
 
-   # Use a securely generated Base64-encoded key with at least 32 decoded bytes.
-   # Do not commit the real key.
-   jwt.secret=REPLACE_WITH_YOUR_BASE64_SECRET
-   ```
+```properties
+spring.application.name=QueueFlow
+server.port=8080
 
-   Use `spring.jpa.hibernate.ddl-auto=update` for local development only. Choose a controlled schema-migration strategy for production.
+spring.datasource.url=jdbc:mysql://localhost:3306/queueflow_db
+spring.datasource.username=YOUR_MYSQL_USERNAME
+spring.datasource.password=YOUR_MYSQL_PASSWORD
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
-4. Run the application on Windows:
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
 
-   ```cmd
-   mvnw.cmd spring-boot:run
-   ```
+# Use a securely generated Base64-encoded key with at least 32 decoded bytes.
+# Never commit the real key.
+jwt.secret=REPLACE_WITH_YOUR_BASE64_SECRET
+```
 
-   On macOS/Linux:
+Use `spring.jpa.hibernate.ddl-auto=update` for local development only. Use a controlled schema-migration strategy for production.
 
-   ```bash
-   ./mvnw spring-boot:run
-   ```
+### 4. Start the backend
 
-5. The API is available at:
+From the repository root:
 
-   ```text
-   http://localhost:8080
-   ```
+**Windows CMD**
+```cmd
+mvnw.cmd spring-boot:run
+```
 
-## Build and Test
+**macOS/Linux**
+```bash
+./mvnw spring-boot:run
+```
 
-Run the Maven test lifecycle:
+The backend API runs at:
 
-Windows:
+```text
+http://localhost:8080
+```
+
+### 5. Install and start the frontend
+
+Open a second terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Vite normally serves the frontend at:
+
+```text
+http://localhost:5173
+```
+
+The frontend API client is configured in `frontend/src/services/api.js` with the local backend URL `http://localhost:8080`. Update this base URL and configure the backend CORS allowed origin when using a different environment or deploying the application.
+
+## Build, Lint, and Test
+
+### Backend
+
+**Windows CMD**
 ```cmd
 mvnw.cmd clean test
+mvnw.cmd -DskipTests package
 ```
 
-macOS/Linux:
+**macOS/Linux**
 ```bash
 ./mvnw clean test
+./mvnw -DskipTests package
 ```
 
-## Authentication and Authorization
+### Frontend
 
-Authenticate with `POST /api/auth/login`. A successful login returns a JWT. Send it on protected requests using:
+From the `frontend` directory:
+
+```bash
+npm run lint
+npm run build
+```
+
+To preview a production frontend build locally:
+
+```bash
+npm run preview
+```
+
+## Authentication
+
+Log in using `POST /api/auth/login`. A successful response includes a JWT. Send the token on protected requests:
 
 ```http
 Authorization: Bearer YOUR_JWT_TOKEN
 ```
 
-Tokens are configured to expire after 24 hours. Log in again after expiry.
-
-Registration endpoints are public:
+Registration endpoints:
 
 - `POST /api/clinics/register`
 - `POST /api/doctors/register`
 - `POST /api/patients/register`
 
-Role access is enforced by Spring Security:
+The application uses role-based authorization for ADMIN, DOCTOR, and PATIENT users. The frontend routes are defined in `frontend/src/App.jsx`; the backend remains responsible for enforcing authorization and record ownership.
 
-- Patient endpoints require the PATIENT role.
-- Doctor endpoints require the DOCTOR role, except the public registration endpoint and public GET endpoints for doctor schedules and slots.
-- Queue-management endpoints require the DOCTOR role.
-- Appointment booking and patient appointment actions require the PATIENT role.
-- Prescription endpoints allow PATIENT and DOCTOR roles, with record ownership checked in the application.
+Email/OTP registration verification is not currently part of the implemented registration flow.
 
 ## Main API Routes
 
@@ -157,18 +230,26 @@ All request and response bodies use JSON unless otherwise noted.
 | POST | `/api/doctors/register` | Public |
 | POST | `/api/patients/register` | Public |
 
+### Doctor browsing and specialties
+
+| Method | Route | Access |
+|---|---|---|
+| GET | `/api/doctors` | Public |
+| GET | `/api/doctors/specialties` | Public |
+| PUT | `/api/doctors/{doctorId}/specialty` | ADMIN |
+
 ### Doctor schedules and appointment slots
 
 | Method | Route | Access |
 |---|---|---|
-| POST | `/api/doctors/{doctorId}/schedule` | Owning doctor |
+| POST | `/api/doctors/{doctorId}/schedule` | Doctor |
 | GET | `/api/doctors/{doctorId}/schedule` | Public |
-| PUT | `/api/doctors/schedule/{scheduleId}` | Owning doctor |
-| DELETE | `/api/doctors/schedule/{scheduleId}` | Owning doctor |
-| POST | `/api/doctors/{doctorId}/generate-slots` | Owning doctor |
+| PUT | `/api/doctors/schedule/{scheduleId}` | Doctor |
+| DELETE | `/api/doctors/schedule/{scheduleId}` | Doctor |
+| POST | `/api/doctors/{doctorId}/generate-slots` | Doctor |
 | GET | `/api/doctors/{doctorId}/slots` | Public |
 
-### Patient appointments
+### Patient appointments and dashboard
 
 | Method | Route | Access |
 |---|---|---|
@@ -176,42 +257,59 @@ All request and response bodies use JSON unless otherwise noted.
 | DELETE | `/api/appointments/{appointmentId}/cancel?patientId={patientId}` | Owning patient |
 | PUT | `/api/appointments/{appointmentId}/reschedule` | Owning patient |
 | GET | `/api/patients/{patientId}/appointments` | Owning patient |
+| GET | `/api/patients/me/dashboard` | Patient |
 
-### Doctor views
+### Doctor dashboard and appointments
 
 | Method | Route | Access |
 |---|---|---|
-| GET | `/api/doctors/{doctorId}/dashboard/statistics?date=YYYY-MM-DD` | Owning doctor |
-| GET | `/api/doctors/{doctorId}/appointments/daily?date=YYYY-MM-DD` | Owning doctor |
-| GET | `/api/doctors/{doctorId}/appointments/upcoming?date=YYYY-MM-DD` | Owning doctor |
-| GET | `/api/doctors/{doctorId}/consultations/history` | Owning doctor |
+| GET | `/api/doctors/{doctorId}/dashboard/statistics?date=YYYY-MM-DD` | Doctor |
+| GET | `/api/doctors/{doctorId}/appointments/daily?date=YYYY-MM-DD` | Doctor |
+| GET | `/api/doctors/{doctorId}/appointments/upcoming?date=YYYY-MM-DD` | Doctor |
+| GET | `/api/doctors/{doctorId}/consultations/history` | Doctor |
 
 ### Queue and consultations
 
 | Method | Route | Access |
 |---|---|---|
-| POST | `/api/queue/check-in` | Owning doctor |
-| GET | `/api/queue/doctors/{doctorId}/today` | Owning doctor |
-| POST | `/api/queue/doctors/{doctorId}/call-next` | Owning doctor |
-| POST | `/api/queue/tickets/{queueTicketId}/start-consultation` | Owning doctor |
-| POST | `/api/queue/tickets/{queueTicketId}/complete-consultation` | Owning doctor |
+| POST | `/api/queue/patient/check-in` | Patient |
+| POST | `/api/queue/check-in` | Doctor |
+| GET | `/api/queue/doctors/{doctorId}/today` | Doctor |
+| POST | `/api/queue/doctors/{doctorId}/call-next` | Doctor |
+| POST | `/api/queue/tickets/{queueTicketId}/start-consultation` | Doctor |
+| POST | `/api/queue/tickets/{queueTicketId}/complete-consultation` | Doctor |
 
 ### Prescriptions
 
 | Method | Route | Access |
 |---|---|---|
-| POST | `/api/prescriptions/create` | Owning doctor |
-| GET | `/api/prescriptions/{prescriptionId}` | Owning doctor or patient owner |
+| POST | `/api/prescriptions/create` | Doctor |
+| GET | `/api/prescriptions/{prescriptionId}` | Authorized doctor or patient owner |
 | GET | `/api/prescriptions/patients/{patientId}/history` | Owning patient |
-| POST | `/api/prescriptions/{prescriptionId}/medicines` | Owning doctor |
-| GET | `/api/prescriptions/{prescriptionId}/medicines` | Owning doctor or patient owner |
-| PUT | `/api/prescriptions/{prescriptionId}/medicines/{prescriptionItemId}` | Owning doctor |
-| DELETE | `/api/prescriptions/{prescriptionId}/medicines/{prescriptionItemId}` | Owning doctor |
+| POST | `/api/prescriptions/{prescriptionId}/medicines` | Doctor |
+| GET | `/api/prescriptions/{prescriptionId}/medicines` | Authorized doctor or patient owner |
+| PUT | `/api/prescriptions/{prescriptionId}/medicines/{prescriptionItemId}` | Doctor |
+| DELETE | `/api/prescriptions/{prescriptionId}/medicines/{prescriptionItemId}` | Doctor |
 
-## Notes
+### Admin user management
 
-- Slot generation uses the clinic's configured timezone and skips slots whose start time has already passed on the current clinic-local date.
-- Booking and rescheduling independently validate that a slot is not in the past.
+| Method | Route | Access |
+|---|---|---|
+| GET | `/api/admin/users` | ADMIN |
+| PATCH | `/api/admin/users/{userId}/status` | ADMIN |
+
+> The tables summarize the main implemented routes. Consult the controller classes for request fields, response formats, validation rules, and any additional endpoints.
+
+## Important Notes
+
+- Doctor slot generation uses the clinic's configured timezone and skips slots whose start time has already passed on the current clinic-local date.
+- Booking and rescheduling validate that a slot is not in the past.
 - Rescheduling creates a replacement appointment record and marks the previous appointment as CANCELLED.
-- This repository currently contains the backend API; a separate frontend is not included here.
-- Do not commit `application.properties`, database passwords, JWT secrets, access tokens, or real patient data.
+- The local frontend is configured to call the backend at `http://localhost:8080`.
+- Local setup instructions are for development, not production deployment.
+- Before production use, verify authentication, authorization, patient-data privacy, error handling, database migrations, backups, HTTPS, and deployment configuration.
+- Never commit `application.properties`, database passwords, JWT secrets, access tokens, or real patient data.
+
+## Repository
+
+[GitHub: Dheeraj-codes-coder/QueueFlow](https://github.com/Dheeraj-codes-coder/QueueFlow)
