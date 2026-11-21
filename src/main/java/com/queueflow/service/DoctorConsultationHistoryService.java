@@ -1,3 +1,4 @@
+
 package com.queueflow.service;
 
 import java.util.ArrayList;
@@ -14,16 +15,20 @@ import com.queueflow.entity.AppUser;
 import com.queueflow.entity.Appointment;
 import com.queueflow.entity.AppointmentSlot;
 import com.queueflow.repository.ConsultationRepository;
+import com.queueflow.repository.PrescriptionRepository;
 
 @Service
 public class DoctorConsultationHistoryService {
 
     private final ConsultationRepository consultationRepository;
+    private final PrescriptionRepository prescriptionRepository;
 
     public DoctorConsultationHistoryService(
-            ConsultationRepository consultationRepository) {
+            ConsultationRepository consultationRepository,
+            PrescriptionRepository prescriptionRepository) {
 
         this.consultationRepository = consultationRepository;
+        this.prescriptionRepository = prescriptionRepository;
     }
 
     @Transactional(readOnly = true)
@@ -49,9 +54,15 @@ public class DoctorConsultationHistoryService {
 
             AppointmentSlot slot = appointment.getSlot();
 
+            Long prescriptionId = prescriptionRepository
+                    .findByConsultation_Id(consultation.getId())
+                    .map(prescription -> prescription.getId())
+                    .orElse(null);
+
             DoctorConsultationHistoryResponse response =
                     new DoctorConsultationHistoryResponse(
                             consultation.getId(),
+                            prescriptionId,
                             appointment.getId(),
                             patient.getId(),
                             user.getFullName(),

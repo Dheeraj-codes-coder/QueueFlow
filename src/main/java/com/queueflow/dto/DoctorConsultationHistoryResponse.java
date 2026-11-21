@@ -1,3 +1,4 @@
+
 package com.queueflow.dto;
 
 import java.time.LocalDate;
@@ -9,6 +10,7 @@ import com.queueflow.enums.AppointmentStatus;
 public class DoctorConsultationHistoryResponse {
 
     private Long consultationId;
+    private Long prescriptionId;
     private Long appointmentId;
     private Long patientId;
     private String patientName;
@@ -25,6 +27,7 @@ public class DoctorConsultationHistoryResponse {
 
     public DoctorConsultationHistoryResponse(
             Long consultationId,
+            Long prescriptionId,
             Long appointmentId,
             Long patientId,
             String patientName,
@@ -40,6 +43,7 @@ public class DoctorConsultationHistoryResponse {
             String consultationNotes) {
 
         this.consultationId = consultationId;
+        this.prescriptionId = prescriptionId;
         this.appointmentId = appointmentId;
         this.patientId = patientId;
         this.patientName = patientName;
@@ -57,6 +61,10 @@ public class DoctorConsultationHistoryResponse {
 
     public Long getConsultationId() {
         return consultationId;
+    }
+
+    public Long getPrescriptionId() {
+        return prescriptionId;
     }
 
     public Long getAppointmentId() {
