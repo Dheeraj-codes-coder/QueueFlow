@@ -1,44 +1,71 @@
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import api from '../services/api'
 
 function DoctorQueue() {
 
   const [queue, setQueue] = useState([])
+  const [doctorId, setDoctorId] = useState(null)
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
   const [success, setSuccess] = useState('')
 
-  const doctorId = 1
-
-  const getQueue = async () => {
+  const getQueue = useCallback(async () => {
     try {
+      setLoading(true)
+      setMessage('')
+
+      const token = localStorage.getItem('token')
+      const user = JSON.parse(localStorage.getItem('user'))
+
+      const doctorsResponse = await api.get('/api/doctors', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      const doctor = doctorsResponse.data.find(
+        item =>
+          item.fullName?.trim().toLowerCase() ===
+          user?.fullName?.trim().toLowerCase()
+      )
+
+      if (!doctor) {
+        setMessage('Doctor profile not found for this account.')
+        setQueue([])
+        return
+      }
+
+      setDoctorId(doctor.doctorId)
+
       const response = await api.get(
-        `/api/queue/doctors/${doctorId}/today`,
+        `/api/queue/doctors/${doctor.doctorId}/today`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${token}`
           }
         }
       )
 
       setQueue(response.data)
-      setMessage('')
 
     } catch (error) {
+      setQueue([])
       setMessage(
         error.response?.data?.message || 'Unable to load queue'
       )
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     getQueue()
-  }, [])
+  }, [getQueue])
 
   const callNextPatient = async () => {
+    if (!doctorId) return
+
     try {
       setMessage('')
       setSuccess('')
@@ -54,8 +81,7 @@ function DoctorQueue() {
       )
 
       setSuccess(response.data.message || 'Next patient called successfully')
-
-      getQueue()
+      await getQueue()
 
     } catch (error) {
       setMessage(
@@ -80,8 +106,7 @@ function DoctorQueue() {
       )
 
       setSuccess(response.data.message || 'Consultation started successfully')
-
-      getQueue()
+      await getQueue()
 
     } catch (error) {
       setMessage(
@@ -91,12 +116,9 @@ function DoctorQueue() {
   }
 
   const completeConsultation = async (queueTicketId) => {
-
     const notes = window.prompt('Enter consultation notes:')
 
-    if (notes === null) {
-      return
-    }
+    if (notes === null) return
 
     try {
       setMessage('')
@@ -104,9 +126,7 @@ function DoctorQueue() {
 
       const response = await api.post(
         `/api/queue/tickets/${queueTicketId}/complete-consultation`,
-        {
-          notes: notes
-        },
+        { notes: notes },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -115,8 +135,7 @@ function DoctorQueue() {
       )
 
       setSuccess(response.data.message || 'Consultation completed successfully')
-
-      getQueue()
+      await getQueue()
 
     } catch (error) {
       setMessage(
@@ -125,16 +144,119 @@ function DoctorQueue() {
     }
   }
 
+  const waitingCount = queue.filter(
+    ticket => ticket.status === 'WAITING'
+  ).length
+
+  const calledCount = queue.filter(
+    ticket => ticket.status === 'CALLED'
+  ).length
+
+  const consultingCount = queue.filter(
+    ticket => ticket.status === 'IN_CONSULTATION'
+  ).length
+
+  const getStatusStyle = (status) => {
+    if (status === 'WAITING') {
+      return { background: '#fff4d6', color: '#9a6700' }
+    }
+
+    if (status === 'CALLED') {
+      return { background: '#dbeafe', color: '#1d4ed8' }
+    }
+
+    if (status === 'IN_CONSULTATION') {
+      return { background: '#ede9fe', color: '#6d28d9' }
+    }
+
+    if (status === 'COMPLETED') {
+      return { background: '#dcfce7', color: '#15803d' }
+    }
+
+    return { background: '#f1f5f9', color: '#475569' }
+  }
+
+  const cardStyle = {
+    background: '#ffffff',
+    border: '1px solid #e8edf3',
+    borderRadius: '16px',
+    padding: '22px',
+    boxShadow: '0 4px 15px rgba(15, 23, 42, 0.04)'
+  }
+
   return (
-    <div className="container mt-4">
+    <div style={{
+      minHeight: '100vh',
+      background: '#f5f7fb',
+      padding: '30px 15px'
+    }}>
 
-      <div className="card shadow p-4">
+      <div style={{ maxWidth: '1200px', margin: 'auto' }}>
 
-        <h2>QueueFlow</h2>
+        {/* Header */}
 
-        <h4 className="mt-3">Queue Management</h4>
+        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
 
-        <p>Manage your patients waiting for consultation.</p>
+          <div>
+            <p style={{
+              color: '#64748b',
+              fontSize: '13px',
+              fontWeight: '600',
+              marginBottom: '6px'
+            }}>
+              DOCTOR WORKSPACE / QUEUE
+            </p>
+
+            <h2 style={{
+              color: '#172554',
+              fontWeight: '750',
+              marginBottom: '5px'
+            }}>
+              Queue Management
+            </h2>
+
+            <p style={{ color: '#64748b', margin: 0 }}>
+              Manage patient check-ins and consultation progress.
+            </p>
+          </div>
+
+          <div className="d-flex gap-2 flex-wrap">
+
+            <button
+              className="btn"
+              style={{
+                background: '#ffffff',
+                border: '1px solid #dbe3ee',
+                color: '#334155',
+                borderRadius: '9px',
+                padding: '10px 16px',
+                fontWeight: '600'
+              }}
+              onClick={getQueue}
+              disabled={loading}
+            >
+              ↻ Refresh
+            </button>
+
+            <button
+              className="btn"
+              style={{
+                background: '#2563eb',
+                color: '#ffffff',
+                borderRadius: '9px',
+                padding: '10px 18px',
+                fontWeight: '600'
+              }}
+              onClick={callNextPatient}
+              disabled={!doctorId || loading}
+            >
+              Call Next Patient →
+            </button>
+
+          </div>
+        </div>
+
+        {/* Alerts */}
 
         {message && (
           <div className="alert alert-danger">
@@ -148,114 +270,265 @@ function DoctorQueue() {
           </div>
         )}
 
-        <div className="d-flex gap-2 mb-3">
+        {/* Summary */}
 
-          <button
-            className="btn btn-primary"
-            onClick={callNextPatient}
-          >
-            Call Next Patient
-          </button>
+        <div className="row g-3 mb-4">
 
-          <button
-            className="btn btn-outline-primary"
-            onClick={getQueue}
-          >
-            Refresh Queue
-          </button>
+          <div className="col-12 col-md-4">
+            <div style={cardStyle}>
+              <p style={{ color: '#64748b', marginBottom: '10px' }}>
+                Waiting Patients
+              </p>
+
+              <h2 style={{ color: '#d97706', fontWeight: '750', margin: 0 }}>
+                {loading ? '—' : waitingCount}
+              </h2>
+
+              <small style={{ color: '#94a3b8' }}>
+                Awaiting their turn
+              </small>
+            </div>
+          </div>
+
+          <div className="col-12 col-md-4">
+            <div style={cardStyle}>
+              <p style={{ color: '#64748b', marginBottom: '10px' }}>
+                Patients Called
+              </p>
+
+              <h2 style={{ color: '#2563eb', fontWeight: '750', margin: 0 }}>
+                {loading ? '—' : calledCount}
+              </h2>
+
+              <small style={{ color: '#94a3b8' }}>
+                Ready for consultation
+              </small>
+            </div>
+          </div>
+
+          <div className="col-12 col-md-4">
+            <div style={cardStyle}>
+              <p style={{ color: '#64748b', marginBottom: '10px' }}>
+                In Consultation
+              </p>
+
+              <h2 style={{ color: '#7c3aed', fontWeight: '750', margin: 0 }}>
+                {loading ? '—' : consultingCount}
+              </h2>
+
+              <small style={{ color: '#94a3b8' }}>
+                Currently being attended
+              </small>
+            </div>
+          </div>
 
         </div>
 
-        {loading && <p>Loading queue...</p>}
+        {/* Queue Table */}
 
-        {!loading && queue.length === 0 && (
-          <div className="alert alert-info">
-            No patients are currently in today's queue.
+        <div style={cardStyle}>
+
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+
+            <div>
+              <h5 style={{
+                color: '#172554',
+                fontWeight: '700',
+                marginBottom: '5px'
+              }}>
+                Today's Patient Queue
+              </h5>
+
+              <p style={{
+                color: '#94a3b8',
+                fontSize: '13px',
+                margin: 0
+              }}>
+                Track and update patient consultation status.
+              </p>
+            </div>
+
+            <span style={{
+              background: '#eff6ff',
+              color: '#2563eb',
+              padding: '7px 12px',
+              borderRadius: '20px',
+              fontSize: '13px',
+              fontWeight: '600'
+            }}>
+              {loading ? 'Loading...' : `${queue.length} Patients`}
+            </span>
+
           </div>
-        )}
 
-        {!loading && queue.length > 0 && (
+          {loading && (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status" />
+              <p className="mt-3 text-muted">Loading patient queue...</p>
+            </div>
+          )}
 
-          <div className="table-responsive">
+          {!loading && !message && queue.length === 0 && (
+            <div className="text-center py-5">
 
-            <table className="table table-bordered table-striped">
+              <div style={{
+                fontSize: '42px',
+                marginBottom: '12px'
+              }}>
+                📋
+              </div>
 
-              <thead>
-                <tr>
-                  <th>Token</th>
-                  <th>Patient Name</th>
-                  <th>Check-in Time</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
+              <h5 style={{ color: '#334155', fontWeight: '650' }}>
+                No patients in the queue
+              </h5>
 
-              <tbody>
+              <p style={{ color: '#94a3b8', margin: 0 }}>
+                Patients who check in today will appear here.
+              </p>
 
-                {queue.map((ticket) => (
+            </div>
+          )}
 
-                  <tr key={ticket.queueTicketId}>
+          {!loading && !message && queue.length > 0 && (
+            <div className="table-responsive">
 
-                    <td>{ticket.tokenNumber}</td>
+              <table className="table align-middle mb-0">
 
-                    <td>{ticket.patientName}</td>
+                <thead>
+                  <tr style={{
+                    background: '#f8fafc',
+                    color: '#64748b',
+                    fontSize: '12px',
+                    textTransform: 'uppercase'
+                  }}>
+                    <th className="py-3">Token</th>
+                    <th>Patient</th>
+                    <th>Check-in Time</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
 
-                    <td>
-                      {ticket.checkInTime
-                        ? new Date(ticket.checkInTime).toLocaleTimeString()
-                        : '-'}
-                    </td>
+                <tbody>
 
-                    <td>{ticket.status}</td>
+                  {queue.map((ticket) => (
 
-                    <td>
+                    <tr key={ticket.queueTicketId}>
 
-                      {ticket.status === 'CALLED' && (
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => startConsultation(ticket.queueTicketId)}
-                        >
-                          Start Consultation
-                        </button>
-                      )}
+                      <td>
+                        <span style={{
+                          background: '#eff6ff',
+                          color: '#1d4ed8',
+                          padding: '7px 12px',
+                          borderRadius: '8px',
+                          fontWeight: '700'
+                        }}>
+                          #{ticket.tokenNumber}
+                        </span>
+                      </td>
 
-                      {ticket.status === 'IN_CONSULTATION' && (
-                        <button
-                          className="btn btn-success btn-sm"
-                          onClick={() => completeConsultation(ticket.queueTicketId)}
-                        >
-                          Complete Consultation
-                        </button>
-                      )}
+                      <td style={{
+                        color: '#1e293b',
+                        fontWeight: '600'
+                      }}>
+                        {ticket.patientName}
+                      </td>
 
-                      {ticket.status !== 'CALLED' &&
-                        ticket.status !== 'IN_CONSULTATION' && (
-                          <span>-</span>
+                      <td style={{ color: '#64748b' }}>
+                        {ticket.checkInTime
+                          ? new Date(ticket.checkInTime).toLocaleTimeString()
+                          : '-'}
+                      </td>
+
+                      <td>
+                        <span style={{
+                          ...getStatusStyle(ticket.status),
+                          padding: '6px 11px',
+                          borderRadius: '20px',
+                          fontSize: '12px',
+                          fontWeight: '700',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {ticket.status?.replaceAll('_', ' ')}
+                        </span>
+                      </td>
+
+                      <td>
+
+                        {ticket.status === 'CALLED' && (
+                          <button
+                            className="btn btn-sm"
+                            style={{
+                              background: '#2563eb',
+                              color: '#ffffff',
+                              borderRadius: '7px',
+                              fontWeight: '600'
+                            }}
+                            onClick={() => startConsultation(ticket.queueTicketId)}
+                          >
+                            Start Consultation
+                          </button>
                         )}
 
-                    </td>
+                        {ticket.status === 'IN_CONSULTATION' && (
+                          <button
+                            className="btn btn-sm"
+                            style={{
+                              background: '#16a34a',
+                              color: '#ffffff',
+                              borderRadius: '7px',
+                              fontWeight: '600'
+                            }}
+                            onClick={() => completeConsultation(ticket.queueTicketId)}
+                          >
+                            Complete
+                          </button>
+                        )}
 
-                  </tr>
+                        {ticket.status !== 'CALLED' &&
+                          ticket.status !== 'IN_CONSULTATION' && (
+                            <span style={{ color: '#94a3b8' }}>—</span>
+                          )}
 
-                ))}
+                      </td>
 
-              </tbody>
+                    </tr>
 
-            </table>
+                  ))}
 
-          </div>
+                </tbody>
 
-        )}
+              </table>
+
+            </div>
+          )}
+
+        </div>
+
+        {/* Back Button */}
 
         <button
-          className="btn btn-secondary mt-3"
+          className="btn mt-4"
+          style={{
+            background: '#e2e8f0',
+            color: '#334155',
+            borderRadius: '9px',
+            padding: '10px 18px',
+            fontWeight: '600'
+          }}
           onClick={() => window.location.href = '/doctor-dashboard'}
         >
-          Back to Dashboard
+          ← Back to Dashboard
         </button>
 
-      </div>
+        <p className="text-center mt-4" style={{
+          color: '#94a3b8',
+          fontSize: '12px'
+        }}>
+          QueueFlow · Healthcare management made simpler
+        </p>
 
+      </div>
     </div>
   )
 }

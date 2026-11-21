@@ -1,14 +1,19 @@
+
 import { useState } from 'react'
 import api from '../services/api'
+import './Login.css'
 
 function Login() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleLogin = async (e) => {
     e.preventDefault()
+    setLoading(true)
+    setMessage('')
 
     try {
 
@@ -38,59 +43,114 @@ function Login() {
         error.response?.data?.message || 'Login failed. Please try again.'
       )
 
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <div className="container d-flex justify-content-center align-items-center min-vh-100">
+    <div className="login-page">
 
-      <div className="card shadow p-4" style={{ width: '400px' }}>
+      <div className="login-left">
 
-        <h2 className="text-center mb-2">QueueFlow</h2>
+        <div className="login-brand">
+          <div className="brand-icon">+</div>
+          <span>QueueFlow</span>
+        </div>
 
-        <p className="text-center text-muted mb-4">
-          Clinic Management System
-        </p>
+        <div className="login-hero">
+          <span className="hero-label">HEALTHCARE MANAGEMENT</span>
 
-        <h4 className="mb-3">Welcome Back</h4>
+          <h1>
+            Better care.
+            <br />
+            <span>Better connections.</span>
+          </h1>
 
-        <form onSubmit={handleLogin}>
+          <p>
+            Manage appointments, coordinate patient queues
+            and simplify clinic operations with QueueFlow.
+          </p>
 
-          <div className="mb-3">
-            <label className="form-label">Email Address</label>
+          <div className="hero-features">
+            <div>✓ Easy appointment management</div>
+            <div>✓ Organized patient queues</div>
+            <div>✓ Digital prescriptions</div>
+          </div>
+        </div>
 
-            <input
-              type="email"
-              className="form-control"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+        <div className="login-footer">
+          © 2026 QueueFlow. All rights reserved.
+        </div>
+
+      </div>
+
+      <div className="login-right">
+
+        <div className="login-form-container">
+
+          <div className="mobile-brand">
+            <div className="brand-icon">+</div>
+            <span>QueueFlow</span>
           </div>
 
-          <div className="mb-3">
-            <label className="form-label">Password</label>
+          <span className="form-label">WELCOME BACK</span>
 
-            <input
-              type="password"
-              className="form-control"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+          <h2>Sign in to your account</h2>
+
+          <p className="form-description">
+            Enter your details to continue to QueueFlow.
+          </p>
+
+          <form onSubmit={handleLogin}>
+
+            <div className="login-field">
+              <label>Email Address</label>
+
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="login-field">
+              <label>Password</label>
+
+              <input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="login-submit"
+              disabled={loading}
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+              <span>→</span>
+            </button>
+
+          </form>
+
+          {message && (
+            <div className="login-message">
+              {message}
+            </div>
+          )}
+
+          <div className="login-security">
+            <span>🔒</span>
+            Your account is protected with secure authentication.
           </div>
 
-          <button type="submit" className="btn btn-primary w-100">
-            Login
-          </button>
-
-        </form>
-
-        {message && (
-          <p className="text-center mt-3">{message}</p>
-        )}
+        </div>
 
       </div>
 

@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react'
 import api from '../services/api'
+import './Dashboard.css'
 
 function PatientDashboard() {
 
@@ -9,6 +10,7 @@ function PatientDashboard() {
   const [patient, setPatient] = useState(null)
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const getPatientDashboard = async () => {
     try {
@@ -40,100 +42,210 @@ function PatientDashboard() {
     window.location.href = '/'
   }
 
+  const openPage = (path) => {
+    setMenuOpen(false)
+    window.location.href = path
+  }
+
   return (
-    <div className="container mt-4">
-      <div className="card shadow p-4">
+    <div className="dashboard-page">
 
-        <h2>QueueFlow</h2>
-        <h4 className="mt-3">Patient Dashboard</h4>
+      {menuOpen && (
+        <button
+          className="dashboard-overlay"
+          aria-label="Close navigation menu"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
 
-        <p>Welcome, {user?.fullName}</p>
-        <p>Manage your appointments and medical activities.</p>
+      <aside className={`dashboard-sidebar ${menuOpen ? 'mobile-open' : ''}`}>
 
-        {loading && <p>Loading patient details...</p>}
+        <div className="dashboard-brand">
+          <div className="dashboard-brand-icon">+</div>
+          <span>QueueFlow</span>
+
+          <button
+            className="sidebar-close"
+            onClick={() => setMenuOpen(false)}
+            aria-label="Close menu"
+          >
+            ×
+          </button>
+        </div>
+
+        <p className="sidebar-label">PATIENT MENU</p>
+
+        <button
+          className="sidebar-link active"
+          onClick={() => openPage('/patient-dashboard')}
+        >
+          <span>▦</span> Dashboard
+        </button>
+
+        <button
+          className="sidebar-link"
+          onClick={() => openPage('/book-appointment')}
+        >
+          <span>＋</span> Book Appointment
+        </button>
+
+        <button
+          className="sidebar-link"
+          onClick={() => openPage('/patient-appointments')}
+        >
+          <span>▣</span> My Appointments
+        </button>
+
+        <button
+          className="sidebar-link"
+          onClick={() => openPage('/patient-prescriptions')}
+        >
+          <span>▤</span> Prescriptions
+        </button>
+
+        <div className="sidebar-bottom">
+          <button className="sidebar-logout" onClick={logout}>
+            ↪ Logout
+          </button>
+        </div>
+
+      </aside>
+
+      <main className="dashboard-main">
+
+        <header className="dashboard-header">
+
+          <div className="dashboard-header-left">
+
+            <button
+              className="mobile-menu-button"
+              onClick={() => setMenuOpen(true)}
+              aria-label="Open navigation menu"
+            >
+              ☰
+            </button>
+
+            <div>
+              <h2>Patient Dashboard</h2>
+              <p>Manage your healthcare in one place.</p>
+            </div>
+
+          </div>
+
+          <div className="dashboard-user">
+            <div className="user-avatar">
+              {user?.fullName?.charAt(0)?.toUpperCase() || 'P'}
+            </div>
+            <div>
+              <strong>{user?.fullName}</strong>
+              <span>Patient</span>
+            </div>
+          </div>
+
+        </header>
+
+        <section className="dashboard-welcome">
+          <div>
+            <span>YOUR HEALTHCARE OVERVIEW</span>
+            <h1>Hello, {user?.fullName || 'Patient'}!</h1>
+            <p>
+              Keep track of your appointments and medical records.
+            </p>
+          </div>
+          <div className="welcome-symbol">✚</div>
+        </section>
+
+        {loading && (
+          <p className="dashboard-loading">Loading patient details...</p>
+        )}
 
         {message && (
-          <div className="alert alert-danger">{message}</div>
+          <div className="dashboard-error">{message}</div>
         )}
 
         {patient && (
-          <div className="row mt-3">
+          <section className="dashboard-section">
 
-            <div className="col-md-3 mb-3">
-              <div className="card p-3">
-                <h6>Total Appointments</h6>
-                <h3>{patient.totalAppointments}</h3>
-              </div>
+            <div className="section-heading">
+              <h3>Appointment Overview</h3>
+              <p>Your appointment statistics</p>
             </div>
 
-            <div className="col-md-3 mb-3">
-              <div className="card p-3">
-                <h6>Upcoming Appointments</h6>
-                <h3>{patient.upcomingAppointments}</h3>
-              </div>
-            </div>
+            <div className="dashboard-stats">
 
-            <div className="col-md-3 mb-3">
-              <div className="card p-3">
-                <h6>Completed Appointments</h6>
-                <h3>{patient.completedAppointments}</h3>
+              <div className="stat-card">
+                <div className="stat-icon blue">▦</div>
+                <p>Total Appointments</p>
+                <h2>{patient.totalAppointments}</h2>
               </div>
-            </div>
 
-            <div className="col-md-3 mb-3">
-              <div className="card p-3">
-                <h6>Cancelled Appointments</h6>
-                <h3>{patient.cancelledAppointments}</h3>
+              <div className="stat-card">
+                <div className="stat-icon green">◷</div>
+                <p>Upcoming Appointments</p>
+                <h2>{patient.upcomingAppointments}</h2>
               </div>
-            </div>
 
-          </div>
+              <div className="stat-card">
+                <div className="stat-icon purple">✓</div>
+                <p>Completed Appointments</p>
+                <h2>{patient.completedAppointments}</h2>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-icon orange">×</div>
+                <p>Cancelled Appointments</p>
+                <h2>{patient.cancelledAppointments}</h2>
+              </div>
+
+            </div>
+          </section>
         )}
 
-        <div className="row mt-4">
+        <section className="dashboard-section">
 
-          <div className="col-md-4 mb-3">
-            <div
-              className="card p-3 h-100"
-              style={{ cursor: 'pointer' }}
-              onClick={() => window.location.href = '/book-appointment'}
-            >
-              <h5>Book Appointment</h5>
-              <p>Find a doctor and book an appointment.</p>
-              <button className="btn btn-primary">
-                Book Now
+          <div className="section-heading">
+            <h3>Quick Actions</h3>
+            <p>Access your healthcare services</p>
+          </div>
+
+          <div className="dashboard-actions">
+
+            <div className="action-card">
+              <div className="action-icon blue">＋</div>
+              <h4>Book Appointment</h4>
+              <p>Find a doctor and book your next appointment.</p>
+              <button onClick={() => openPage('/book-appointment')}>
+                Book Now <span>→</span>
               </button>
             </div>
-          </div>
 
-          <div className="col-md-4 mb-3">
-            <div
-              className="card p-3 h-100"
-              style={{ cursor: 'pointer' }}
-              onClick={() => window.location.href = '/patient-appointments'}
-            >
-              <h5>My Appointments</h5>
-              <p>View your appointments.</p>
-              <button className="btn btn-primary">
-                View Appointments
+            <div className="action-card">
+              <div className="action-icon green">▣</div>
+              <h4>My Appointments</h4>
+              <p>View, reschedule and manage your appointments.</p>
+              <button onClick={() => openPage('/patient-appointments')}>
+                View Appointments <span>→</span>
               </button>
             </div>
-          </div>
 
-          <div className="col-md-4 mb-3">
-            <div className="card p-3 h-100">
-              <h5>Prescriptions</h5>
-              <p>View your prescriptions.</p>
+            <div className="action-card">
+              <div className="action-icon purple">▤</div>
+              <h4>Prescriptions</h4>
+              <p>View your prescribed medicines and download PDFs.</p>
+              <button onClick={() => openPage('/patient-prescriptions')}>
+                View Prescriptions <span>→</span>
+              </button>
             </div>
+
           </div>
+        </section>
 
-        </div>
+        <footer className="dashboard-footer">
+          QueueFlow · Healthcare management made simpler.
+        </footer>
 
-        <button className="btn btn-danger mt-3" onClick={logout}>
-          Logout
-        </button>
+      </main>
 
-      </div>
     </div>
   )
 }
